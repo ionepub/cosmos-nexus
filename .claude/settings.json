@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "pattern": "Edit|Write",
+        "command": "npx tsc --noEmit",
+        "description": "Run TypeScript type checking"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "pattern": "Edit|Write",
+        "filePath": "(package-lock|pnpm-lock|yarn-lock)\\.json$",
+        "action": "block",
+        "message": "Use npm/pnpm/yarn commands to manage dependencies"
+      }
+    ]
+  }
+}
