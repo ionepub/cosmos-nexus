@@ -16,10 +16,13 @@ export function PersonNode({ person, isCore, onClick, onPositionUpdate }: Person
   const meshRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  const baseSize = isCore ? 0.25 : 0.12 + person.importance * 0.08;
   const maxSize = Math.max(1, person.connectionCount);
 
-  const orbitSpeed = useMemo(() => 0.05 + Math.random() * 0.1, []);
+  const baseSize = isCore
+    ? 0.25 + (person.connectionCount / maxSize) * 0.15
+    : 0.12 + person.importance * 0.06 + (person.connectionCount / maxSize) * 0.04;
+
+  const orbitSpeed = useMemo(() => 0.02 + Math.random() * 0.03, []);
   const orbitRadius = person.position.length();
   const orbitAngle = useMemo(() => Math.atan2(person.position.x, person.position.z), []);
   const twinkleSpeed = useMemo(() => 2 + Math.random() * 3, []);
@@ -27,25 +30,28 @@ export function PersonNode({ person, isCore, onClick, onPositionUpdate }: Person
 
   useFrame((state) => {
     if (groupRef.current) {
-      if (!hovered) {
-        if (!isCore) {
-          const currentAngle = orbitAngle + state.clock.elapsedTime * orbitSpeed;
-          const currentRadius = orbitRadius + Math.sin(state.clock.elapsedTime * 0.5 + twinkleOffset) * 0.2;
+      const currentAngle = orbitAngle + state.clock.elapsedTime * orbitSpeed;
+      const currentRadius = orbitRadius + Math.sin(state.clock.elapsedTime * 0.5 + twinkleOffset) * 0.2;
 
-          groupRef.current.position.x = currentRadius * Math.sin(currentAngle);
-          groupRef.current.position.y = person.position.y + Math.sin(state.clock.elapsedTime * 0.8 + twinkleOffset) * 0.2;
-          groupRef.current.position.z = currentRadius * Math.cos(currentAngle);
-        } else {
-          groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.3;
-        }
+      const targetX = currentRadius * Math.sin(currentAngle);
+      const targetY = person.position.y + Math.sin(state.clock.elapsedTime * 0.8 + twinkleOffset) * 0.2;
+      const targetZ = currentRadius * Math.cos(currentAngle);
+
+      if (!isCore && !hovered) {
+        groupRef.current.position.x += (targetX - groupRef.current.position.x) * 0.1;
+        groupRef.current.position.y += (targetY - groupRef.current.position.y) * 0.1;
+        groupRef.current.position.z += (targetZ - groupRef.current.position.z) * 0.1;
+      } else if (isCore) {
+        const coreTargetY = Math.sin(state.clock.elapsedTime * 0.15) * 0.3;
+        groupRef.current.position.y += (coreTargetY - groupRef.current.position.y) * 0.1;
       }
 
       onPositionUpdate(person.id, groupRef.current.position.clone());
     }
 
     if (meshRef.current) {
-      meshRef.current.rotation.y += 0.003;
-      meshRef.current.rotation.x += 0.001;
+      meshRef.current.rotation.y += 0.002;
+      meshRef.current.rotation.x += 0.0005;
     }
   });
 
